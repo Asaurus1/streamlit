@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 from dataclasses import FrozenInstanceError
 
@@ -22,14 +23,15 @@ from streamlit.runtime.script_data import ScriptData
 
 class ScriptDataTest(unittest.TestCase):
     def test_script_folder_and_name_set(self):
+        script_path = os.path.abspath(os.path.join("path", "to", "some", "script.py"))
         script_data = ScriptData(
-            "/path/to/some/script.py",
-            "streamlit run /path/to/some/script.py",
+            script_path,
+            f"streamlit run {script_path}",
         )
 
-        assert script_data.main_script_path == "/path/to/some/script.py"
-        assert script_data.command_line == "streamlit run /path/to/some/script.py"
-        assert script_data.script_folder == "/path/to/some"
+        assert script_data.main_script_path == script_path
+        assert script_data.command_line == f"streamlit run {script_path}"
+        assert script_data.script_folder == os.path.dirname(script_path)
         assert script_data.name == "script"
 
     def test_is_frozen(self):

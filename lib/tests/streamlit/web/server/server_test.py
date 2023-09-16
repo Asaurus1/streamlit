@@ -19,6 +19,7 @@ import contextlib
 import errno
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -399,6 +400,7 @@ class SslServerTest(unittest.TestCase):
         )
 
     @parameterized.expand(["server.sslCertFile", "server.sslKeyFile"])
+    @unittest.skipIf(sys.platform == "win32", "Cannot reliably call openssl in Windows")
     def test_invalid_file_content(self, option_name):
         """
         The test checks the behavior whenever one of the two requires file is corrupted.
@@ -483,9 +485,10 @@ class UnixSocketTest(unittest.TestCase):
         with patch(
             "streamlit.web.server.server.HTTPServer", return_value=mock_server
         ), patch.object(
-            tornado.netutil, "bind_unix_socket", return_value=some_socket
+            tornado.netutil, "bind_unix_socket", return_value=some_socket, create=True
         ) as bind_unix_socket, patch.dict(
-            os.environ, {"HOME": "/home/superfakehomedir"}
+            os.environ,
+            {"HOME": "/home/superfakehomedir", "USERPROFILE": "/home/superfakehomedir"},
         ):
             start_listening(app)
 

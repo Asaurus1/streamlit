@@ -26,6 +26,7 @@ repos:
         args:
           # Configure Black to support only syntax supported by the minimum supported Python version in setup.py.
           - --target-version=py37
+          - --force-exclude=e2e_flaky/scripts/  # These are symlink files
         files: \.py$|\.pyi$
   - repo: https://github.com/PyCQA/isort
     rev: 5.11.5

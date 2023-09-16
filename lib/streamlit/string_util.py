@@ -117,7 +117,7 @@ def simplify_number(num: int) -> str:
     )
 
 
-_OBJ_MEM_ADDRESS = re.compile(r"^\<[a-zA-Z_]+[a-zA-Z0-9<>._ ]* at 0x[0-9a-f]+\>$")
+_OBJ_MEM_ADDRESS = re.compile(r"^\<[a-zA-Z_]+[a-zA-Z0-9<>._ ]* at 0x[0-9a-fA-F]+\>$")
 
 
 def is_mem_address_str(string):

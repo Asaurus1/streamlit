@@ -21,7 +21,7 @@ import pytest
 
 from streamlit import file_util, util
 
-FILENAME = "/some/cache/file"
+FILENAME = os.path.abspath(os.path.join("some", "cache", "file"))
 mock_get_path = MagicMock(return_value=FILENAME)
 
 
@@ -57,7 +57,7 @@ class FileUtilTest(unittest.TestCase):
         with pytest.raises(util.Error) as e:
             with file_util.streamlit_read(FILENAME) as input:
                 input.read()
-        self.assertEqual(str(e.value), 'Read zero byte file: "/some/cache/file"')
+        self.assertEqual(str(e.value), f'Read zero byte file: "{FILENAME}"')
 
     @patch("streamlit.file_util.get_streamlit_file_path", mock_get_path)
     def test_streamlit_write(self):
@@ -85,7 +85,7 @@ class FileUtilTest(unittest.TestCase):
             ) as output:
                 output.write("some data")
             error_msg = (
-                "Unable to write file: /some/cache/file\n"
+                f"Unable to write file: {FILENAME}\n"
                 "Python is limited to files below 2GB on OSX. "
                 "See https://bugs.python.org/issue24658"
             )
@@ -93,11 +93,14 @@ class FileUtilTest(unittest.TestCase):
 
     def test_get_project_streamlit_file_path(self):
         expected = os.path.join(
-            os.getcwd(), file_util.CONFIG_FOLDER_NAME, "some/random/file"
+            os.getcwd(), file_util.CONFIG_FOLDER_NAME, "some", "random", "file"
         )
 
         self.assertEqual(
-            expected, file_util.get_project_streamlit_file_path("some/random/file")
+            expected,
+            file_util.get_project_streamlit_file_path(
+                os.path.join("some", "random", "file")
+            ),
         )
 
         self.assertEqual(
@@ -107,8 +110,10 @@ class FileUtilTest(unittest.TestCase):
 
     def test_get_app_static_dir(self):
         self.assertEqual(
-            file_util.get_app_static_dir("/some_path/to/app/myapp.py"),
-            "/some_path/to/app/static",
+            file_util.get_app_static_dir(
+                os.path.join("some_path", "to", "app", "myapp.py")
+            ),
+            os.path.abspath(os.path.join("some_path", "to", "app", "static")),
         )
 
     @patch("os.path.getsize", MagicMock(return_value=42))

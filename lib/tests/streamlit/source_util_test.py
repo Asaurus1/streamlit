@@ -44,10 +44,11 @@ class PageHelperFunctionTests(unittest.TestCase):
         assert source_util.page_sort_key(Path(path_str)) == expected
 
     def test_page_sort_key_error(self):
+        path = Path("/foo/bar/baz.rs")
         with pytest.raises(AssertionError) as e:
             source_util.page_sort_key(Path("/foo/bar/baz.rs"))
 
-        assert str(e.value) == "/foo/bar/baz.rs is not a Python file"
+        assert str(e.value) == f"{path} is not a Python file"
 
     @parameterized.expand(
         [

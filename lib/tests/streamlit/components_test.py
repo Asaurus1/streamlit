@@ -146,7 +146,7 @@ class ComponentRegistryTest(unittest.TestCase):
 
     def test_register_component_with_path(self):
         """Registering a component should associate it with its path."""
-        test_path = "/a/test/component/directory"
+        test_path = os.path.abspath(os.path.join("a", "test", "component", "directory"))
 
         def isdir(path):
             return path == test_path
@@ -189,8 +189,12 @@ class ComponentRegistryTest(unittest.TestCase):
         """It's not an error to re-register a component.
         (This can happen during development).
         """
-        test_path_1 = "/a/test/component/directory"
-        test_path_2 = "/another/test/component/directory"
+        test_path_1 = os.path.abspath(
+            os.path.join("a", "test", "component", "directory")
+        )
+        test_path_2 = os.path.abspath(
+            os.path.join("another", "test", "component", "directory")
+        )
 
         def isdir(path):
             return path in (test_path_1, test_path_2)

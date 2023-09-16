@@ -28,7 +28,9 @@ from streamlit import config
 from streamlit.watcher import local_sources_watcher
 from streamlit.watcher.path_watcher import NoOpPathWatcher, watchdog_available
 
-SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "test_data/not_a_real_script.py")
+SCRIPT_PATH = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "test_data", "not_a_real_script.py")
+)
 
 DUMMY_MODULE_1_FILE = os.path.abspath(DUMMY_MODULE_1.__file__)
 DUMMY_MODULE_2_FILE = os.path.abspath(DUMMY_MODULE_2.__file__)

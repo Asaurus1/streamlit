@@ -61,6 +61,8 @@ class ServerUtilTest(unittest.TestCase):
     def test_get_url(
         self, base_url: Optional[str], port: Optional[int], expected_url: str
     ):
+        # NOTE: This test will FAIL if a streamlit instaince is already running
+        # on port 8501 on this machine.
         options = {"server.headless": False, "global.developmentMode": False}
 
         if base_url:

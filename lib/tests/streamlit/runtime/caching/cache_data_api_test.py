@@ -297,10 +297,10 @@ class CacheDataPersistTest(DeltaGeneratorTestCase):
         mock_write.assert_called_once()
 
         write_path = mock_write.call_args[0][0]
-        match = re.fullmatch(
-            r"/mock/home/folder/.streamlit/cache/.*?\.memo", write_path
-        )
-        self.assertIsNotNone(match)
+        match_memo = re.fullmatch(r".*?.memo", write_path)
+        match_dir = os.path.expanduser(os.path.join("~", ".streamlit", "cache"))
+        self.assertIsNotNone(match_memo)
+        self.assertEqual(match_dir, os.path.dirname(write_path))
 
     @patch("streamlit.file_util.os.stat", MagicMock())
     @patch(
