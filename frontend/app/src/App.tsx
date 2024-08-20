@@ -1065,9 +1065,13 @@ export class App extends PureComponent<Props, State> {
       sendMessageToHost: this.hostCommunicationMgr.sendMessageToHost,
     })
 
-    // Protobuf typing cannot handle complex types, so we need to cast to what
-    // we know it should be
-    this.handleSessionStatusChanged(initialize.sessionStatus as SessionStatus)
+    if (notNullOrUndefined(initialize.sessionStatus)) {
+      // Protobuf typing cannot handle complex types, so we need to cast to what
+      // we know it should be
+      this.handleSessionStatusChanged(
+        initialize.sessionStatus as SessionStatus
+      )
+    }
   }
 
   /**

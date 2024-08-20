@@ -62,10 +62,10 @@ type RequiredCameraInputButtonProps = Required<CameraInputButtonProps>
 export const StyledCameraInput = styled.div({
   // This is used to position the "Switch facing mode" button
   // with respect to the webcam block.
-  position: "relative",
+  position: "relative" as const,
   overflow: "hidden",
   width: "100%",
-  objectFit: "contain",
+  objectFit: "contain" as const,
 })
 
 export interface StyledBoxProps {
@@ -126,7 +126,7 @@ export const StyledWebcamWrapper = styled.div({
 export const StyledProgressBar = styled.div({
   height: "fit-content",
   width: "100%",
-  position: "absolute",
+  position: "absolute" as const,
   bottom: 0,
 })
 
