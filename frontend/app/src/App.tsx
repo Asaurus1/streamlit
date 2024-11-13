@@ -1115,12 +1115,12 @@ export class App extends PureComponent<Props, State> {
   onHistoryChange = (): void => {
     const { currentPageScriptHash } = this.state
     const targetAppPage = this.appNavigation.findPageByUrlPath(
-      document.location.pathname
+      window.location.pathname
     )
     const targetQueryString = window.location.search.replace("?", "")
 
     // do not cause a rerun when an anchor is clicked and we aren't changing pages
-    const hasAnchor = document.location.toString().includes("#")
+    const hasAnchor = window.location.toString().includes("#")
     const isSamePage = targetAppPage?.pageScriptHash === currentPageScriptHash
 
     if (isNullOrUndefined(targetAppPage) || (hasAnchor && isSamePage)) {
@@ -1552,9 +1552,9 @@ export class App extends PureComponent<Props, State> {
       // non-main page of this app. Since we haven't received the list of the
       // app's pages from the server at this point, we fall back to requesting
       // the page to run via pageName, which we extract from
-      // document.location.pathname.
+      // window.location.pathname.
       pageName = extractPageNameFromPathName(
-        document.location.pathname,
+        window.location.pathname,
         basePath
       )
       pageScriptHash = ""
@@ -1814,7 +1814,7 @@ export class App extends PureComponent<Props, State> {
 
     const queryString = notNullOrUndefined(queryParams)
       ? queryParams
-      : document.location.search
+      : window.location.search
 
     return queryString.startsWith("?") ? queryString.substring(1) : queryString
   }
