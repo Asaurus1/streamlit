@@ -33,6 +33,7 @@ const getProps = (
     label: "Label",
     page: "streamlit_app",
     pageScriptHash: "main_page_hash",
+    queryString: "query=string",
     useContainerWidth: null,
     ...elementProps,
   }),
@@ -131,7 +132,9 @@ describe("PageLink", () => {
 
     const pageNavLink = screen.getByTestId("stPageLink-NavLink")
     await user.click(pageNavLink)
-    expect(mockOnPageChange).toHaveBeenCalledWith("main_page_hash")
+    expect(mockOnPageChange).toHaveBeenCalledWith("main_page_hash",
+      "query=string"
+    )
   })
 
   it("does not trigger onPageChange when disabled", async () => {
