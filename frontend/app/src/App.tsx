@@ -948,7 +948,7 @@ export class App extends PureComponent<Props, State> {
       // See https://github.com/streamlit/streamlit/pull/6271#issuecomment-1465090690 for the discussion.
       if (prevPageName !== newPageName) {
         const pagePath = isViewingMainPage ? "" : newPageName
-        const queryString = preserveEmbedQueryParams()
+        const queryString = preserveEmbedQueryParams("").toString()
         const qs = queryString ? `?${queryString}` : ""
 
         const basePathPrefix = basePath ? `/${basePath}` : ""
@@ -1489,7 +1489,7 @@ export class App extends PureComponent<Props, State> {
       // value in the BackMsg we send to the server.
       if (pageScriptHash != currentPageScriptHash) {
         // clear non-embed query parameters within a page change
-        queryString = preserveEmbedQueryParams()
+        queryString = preserveEmbedQueryParams("").toString()
         this.hostCommunicationMgr.sendMessageToHost({
           type: "SET_QUERY_PARAM",
           queryParams: queryString,
