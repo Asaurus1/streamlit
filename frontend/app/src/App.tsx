@@ -25,6 +25,7 @@ import without from "lodash/without"
 import {
   AppConfig,
   AppRoot,
+  areUserURLSearchParamsEqual,
   AutoRerun,
   BackMsg,
   BaseUriParts,
@@ -75,6 +76,7 @@ import {
   logError,
   logMessage,
   Logo,
+  logWarning,
   mark,
   measure,
   Navigation,
@@ -787,14 +789,10 @@ export class App extends PureComponent<Props, State> {
 
   handlePageInfoChanged = (pageInfo: PageInfo): void => {
     const { queryString } = pageInfo
-    const targetUrl =
-      document.location.pathname + (queryString ? `?${queryString}` : "")
-    window.history.pushState({}, "", targetUrl)
-
-    this.hostCommunicationMgr.sendMessageToHost({
-      type: "SET_QUERY_PARAM",
-      queryParams: queryString ? `?${queryString}` : "",
-    })
+    this.maybeSetState([
+      { queryParams: queryString },
+      () => this.maybeUpdatePageUrl(),
+    ])
   }
 
   onPageNotFound = (pageName?: string): void => {
@@ -925,37 +923,74 @@ export class App extends PureComponent<Props, State> {
    * Updates the page url if the page has changed
    * @param mainPageName the name of the main page
    * @param newPageName the name of the new page
-   * @param isViewingMainPage whether the user is viewing the main page
    */
-  maybeUpdatePageUrl = (
-    mainPageName: string,
-    newPageName: string,
-    isViewingMainPage: boolean
-  ): void => {
+  maybeUpdatePageUrl = (mainPageName?: string, newPageName?: string): void => {
+    // Start by extracting the URL path
     const baseUriParts = this.getBaseUriParts()
-    if (baseUriParts) {
-      const { basePath } = baseUriParts
-
-      const prevPageNameInPath = extractPageNameFromPathName(
-        document.location.pathname,
-        basePath
+    if (isNullOrUndefined(baseUriParts)) {
+      logWarning(
+        "unable to get baseUriParts. We might not have an active ConnectionManager."
       )
-      const prevPageName =
+      return
+    }
+    const { basePath } = baseUriParts
+
+    // Figure out the page name in the URL path name
+    const prevPageNameInPath = extractPageNameFromPathName(
+      window.location.pathname,
+      basePath
+    )
+
+    // If mainPageName is undefined, we don't even try to figure out
+    // what page is in the URL already
+    let newPagePath: string
+    let prevPageName: string
+    if (notNullOrUndefined(mainPageName)) {
+      prevPageName =
         prevPageNameInPath === "" ? mainPageName : prevPageNameInPath
       // It is important to compare `newPageName` with the previous one encoded in the URL
       // to handle new session runs triggered by URL changes through the `onHistoryChange()` callback,
       // e.g. the case where the user clicks the back button.
       // See https://github.com/streamlit/streamlit/pull/6271#issuecomment-1465090690 for the discussion.
-      if (prevPageName !== newPageName) {
-        const pagePath = isViewingMainPage ? "" : newPageName
-        const queryString = preserveEmbedQueryParams("").toString()
-        const qs = queryString ? `?${queryString}` : ""
 
-        const basePathPrefix = basePath ? `/${basePath}` : ""
+      // If the new page name is not specified, it's the old page name
+      newPageName = newPageName ?? prevPageName
+      newPagePath = newPageName === mainPageName ? "" : newPageName
+    } else if (notNullOrUndefined(newPageName)) {
+      logError("newPageName specified witout providing mainPageName.")
+      return
+    } else {
+      prevPageName = newPageName = newPagePath = prevPageNameInPath
+    }
 
-        const pageUrl = `${basePathPrefix}/${pagePath}${qs}`
+    // Extract the query string.
+    // The Previous query string we compare to is ALWAYS the one in the URL bar
+    const prevQueryString = window.location.search
+    // and the New one is always the one from app state (with window URL as a fallback)
+    const requestedQueryString = this.getQueryString()
 
-        window.history.pushState({}, "", pageUrl)
+    // If either the page name or the query params have changed, push a new URL to the page history.
+    if (
+      prevPageName !== newPageName ||
+      !areUserURLSearchParamsEqual(prevQueryString, requestedQueryString)
+    ) {
+      const newQueryParams = preserveEmbedQueryParams(
+        requestedQueryString,
+        prevQueryString
+      )
+      const queryString =
+        newQueryParams.size > 0 ? "?" + newQueryParams.toString() : ""
+      const basePathPrefix = basePath ? `/${basePath}` : ""
+      const pageUrl = `${basePathPrefix}/${newPagePath}${queryString}`
+
+      window.history.pushState({}, "", pageUrl)
+
+      // If queryString was specified, send a host message
+      if (queryString) {
+        this.hostCommunicationMgr.sendMessageToHost({
+          type: "SET_QUERY_PARAM",
+          queryParams: queryString,
+        })
       }
     }
   }

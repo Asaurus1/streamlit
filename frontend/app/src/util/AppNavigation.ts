@@ -32,15 +32,16 @@ interface AppNavigationState {
   appPages: IAppPage[]
   currentPageScriptHash: string
   navSections: string[]
+  queryParams?: string
 }
 
 export type MaybeStateUpdate =
   | [Partial<AppNavigationState>, () => void]
   | undefined
 export type PageUrlUpdateCallback = (
-  mainPageName: string,
-  newPageName: string,
-  isViewingMainPage: boolean
+  mainPageName?: string,
+  newPageName?: string,
+  queryString?: string
 ) => void
 export type PageNotFoundCallback = (pageName?: string) => void
 export type SetIconCallback = (icon: string) => void
@@ -89,7 +90,6 @@ export class StrategyV1 {
 
     const isViewingMainPage =
       mainPage.pageScriptHash === this.currentPageScriptHash
-    this.appNav.onUpdatePageUrl(mainPageName, newPageName, isViewingMainPage)
 
     // Set the title to its default value
     document.title = getTitle(newPageName ?? "")
@@ -101,6 +101,8 @@ export class StrategyV1 {
         currentPageScriptHash: this.currentPageScriptHash,
       },
       () => {
+        this.appNav.onUpdatePageUrl(mainPageName, newPageName)
+
         this.appNav.hostCommunicationMgr.sendMessageToHost({
           type: "SET_APP_PAGES",
           appPages: this.appPages,
@@ -252,12 +254,6 @@ export class StrategyV2 {
       this.appNav.onPageIconChange(currentPage.icon)
     }
 
-    this.appNav.onUpdatePageUrl(
-      mainPage.urlPathname ?? "",
-      currentPageName,
-      currentPage.isDefault ?? false
-    )
-
     return [
       {
         appPages,
@@ -267,6 +263,11 @@ export class StrategyV2 {
         currentPageScriptHash,
       },
       () => {
+        this.appNav.onUpdatePageUrl(
+          mainPage.urlPathname ?? "",
+          currentPageName
+        )
+
         this.appNav.hostCommunicationMgr.sendMessageToHost({
           type: "SET_APP_PAGES",
           appPages,
