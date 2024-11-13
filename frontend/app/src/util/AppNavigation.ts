@@ -91,6 +91,9 @@ export class StrategyV1 {
     const isViewingMainPage =
       mainPage.pageScriptHash === this.currentPageScriptHash
 
+    // Store the query string
+    const queryString = (this.appNav.newQueryString = newSession.queryString)
+
     // Set the title to its default value
     document.title = getTitle(newPageName ?? "")
 
@@ -99,6 +102,7 @@ export class StrategyV1 {
         hideSidebarNav: this.hideSidebarNav,
         appPages: this.appPages,
         currentPageScriptHash: this.currentPageScriptHash,
+        queryParams: queryString,
       },
       () => {
         this.appNav.onUpdatePageUrl(mainPageName, newPageName)
@@ -203,7 +207,18 @@ export class StrategyV2 {
     // We do not know the page name, so use an empty string version
     document.title = getTitle("")
 
-    return [{ hideSidebarNav: this.hideSidebarNav ?? false }, () => {}]
+    // Store the new query string we got since we can't do anything
+    // with it until we know what page we're rendering when we get
+    // a handleNavigation call.
+    this.appNav.newQueryString = newSession.queryString
+
+    return [
+      {
+        hideSidebarNav: this.hideSidebarNav ?? false,
+        queryParams: newSession.queryString,
+      },
+      () => {},
+    ]
   }
 
   handlePagesChanged(_pagesChangedMsg: PagesChanged): MaybeStateUpdate {
@@ -317,6 +332,8 @@ export class AppNavigation {
 
   isPageIconSet: boolean
 
+  newQueryString: string
+
   strategy: StrategyV1 | StrategyV2
 
   constructor(
@@ -331,6 +348,7 @@ export class AppNavigation {
     this.onPageIconChange = onPageIconChange
     this.isPageIconSet = false
     this.isPageTitleSet = false
+    this.newQueryString = ""
 
     // Start with the V1 strategy as it will apply to V0 as well
     this.strategy = new StrategyV1(this)
