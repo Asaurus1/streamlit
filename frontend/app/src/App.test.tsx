@@ -382,6 +382,7 @@ describe("App", () => {
   beforeEach(() => {
     // @ts-expect-error
     window.prerenderReady = false
+    window.location.search = window.location.pathname = ""
     vi.clearAllMocks()
   })
 
@@ -1527,14 +1528,14 @@ describe("App", () => {
 
     afterEach(() => {
       pushStateSpy.mockRestore()
-      // Reset the value of document.location.pathname.
+      // Reset the value of window.location.pathname.
       window.history.pushState({}, "", "/")
     })
 
     it("does not override the pathname when setting query params", () => {
       renderApp(getProps())
       const pathname = "/foo/bar/"
-      // Set the value of document.location.pathname to pathname.
+      // Set the value of window.location.pathname to pathname.
       window.history.pushState({}, "", pathname)
 
       const queryString = "flying=spaghetti&monster=omg"
@@ -1550,7 +1551,7 @@ describe("App", () => {
     it("does not override the pathname when resetting query params", () => {
       renderApp(getProps())
       const pathname = "/foo/bar/"
-      // Set the value of document.location.pathname to pathname.
+      // Set the value of window.location.pathname to pathname.
       window.history.pushState({}, "", pathname)
 
       sendForwardMessage("pageInfoChanged", {
@@ -1574,7 +1575,7 @@ describe("App", () => {
 
     it("sets query params as expected when at the root pathname", () => {
       renderApp(getProps())
-      // Note: One would typically set the value of document.location.pathname to '/' here,
+      // Note: One would typically set the value of window.location.pathname to '/' here,
       // However, this is already taking place in beforeEach().
 
       const queryString = "flying=spaghetti&monster=omg"
