@@ -1562,8 +1562,8 @@ describe("App", () => {
 
     it("resets query params as expected when at the root pathname", () => {
       renderApp(getProps())
-      // Note: One would typically set the value of document.location.pathname to '/' here,
-      // However, this is already taking place in beforeEach().
+      window.history.pushState({}, "", "/?foo=bar")
+      pushStateSpy.mockClear()
 
       sendForwardMessage("pageInfoChanged", {
         queryString: "",
@@ -1585,6 +1585,18 @@ describe("App", () => {
 
       const expectedUrl = `/?${queryString}`
       expect(pushStateSpy).toHaveBeenLastCalledWith({}, "", expectedUrl)
+    })
+
+    it("does not push new state if the query string has not changed", () => {
+      renderApp(getProps())
+      const queryString = "flying=spaghetti&monster=omg"
+      // We start with the same query string that we're going to receive
+      window.history.pushState({}, "", "/?" + queryString)
+      pushStateSpy.mockClear()
+
+      sendForwardMessage("pageInfoChanged", { queryString })
+
+      expect(pushStateSpy).not.toHaveBeenCalled()
     })
   })
 
