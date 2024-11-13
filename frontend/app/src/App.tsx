@@ -179,7 +179,7 @@ interface State {
   hostHideSidebarNav: boolean
   sidebarChevronDownshift: number
   pageLinkBaseUrl: string
-  queryParams: string
+  queryParams: string | null
   deployedAppMetadata: DeployedAppMetadata
   libConfig: LibConfig
   appConfig: AppConfig
@@ -304,7 +304,7 @@ export class App extends PureComponent<Props, State> {
       hostHideSidebarNav: false,
       sidebarChevronDownshift: 0,
       pageLinkBaseUrl: "",
-      queryParams: "",
+      queryParams: null,
       deployedAppMetadata: {},
       libConfig: {},
       appConfig: {},
@@ -1117,6 +1117,7 @@ export class App extends PureComponent<Props, State> {
     const targetAppPage = this.appNavigation.findPageByUrlPath(
       document.location.pathname
     )
+    const targetQueryString = window.location.search.replace("?", "")
 
     // do not cause a rerun when an anchor is clicked and we aren't changing pages
     const hasAnchor = document.location.toString().includes("#")
@@ -1125,7 +1126,11 @@ export class App extends PureComponent<Props, State> {
     if (isNullOrUndefined(targetAppPage) || (hasAnchor && isSamePage)) {
       return
     }
-    this.onPageChange(targetAppPage.pageScriptHash as string)
+
+    this.onPageChange(
+      targetAppPage.pageScriptHash as string,
+      targetQueryString
+    )
   }
 
   /**
@@ -1460,7 +1465,7 @@ export class App extends PureComponent<Props, State> {
     )
   }
 
-  onPageChange = (pageScriptHash: string): void => {
+  onPageChange = (pageScriptHash: string, queryString?: string): void => {
     const { elements, mainScriptHash } = this.state
 
     // We are about to change the page, so clear all auto reruns
@@ -1482,11 +1487,26 @@ export class App extends PureComponent<Props, State> {
         .filter(notUndefined)
     )
 
-    this.sendRerunBackMsg(
-      this.widgetMgr.getActiveWidgetStates(activeWidgetIds),
-      undefined,
-      pageScriptHash
-    )
+    // Preserve the "embed" values from the existing query string
+    // in the new page query string.
+    const queryParams = preserveEmbedQueryParams(
+      queryString,
+      this.getQueryString()
+    ).toString()
+    this.hostCommunicationMgr.sendMessageToHost({
+      type: "SET_QUERY_PARAM",
+      queryParams,
+    })
+
+    // We set the internal APP state first, and then as a callback call sendRerunBackMsg.
+    // The latter then sends the state queryParams to the backend.
+    this.setState({ queryParams }, () => {
+      this.sendRerunBackMsg(
+        this.widgetMgr.getActiveWidgetStates(activeWidgetIds),
+        undefined,
+        pageScriptHash
+      )
+    })
   }
 
   isAppInReadyState = (prevState: Readonly<State>): boolean => {
@@ -1516,20 +1536,12 @@ export class App extends PureComponent<Props, State> {
 
     const { currentPageScriptHash } = this.state
     const { basePath } = baseUriParts
-    let queryString = this.getQueryString()
+    const queryString = this.getQueryString()
     let pageName = ""
 
     if (pageScriptHash) {
       // The user specified exactly which page to run. We can simply use this
       // value in the BackMsg we send to the server.
-      if (pageScriptHash != currentPageScriptHash) {
-        // clear non-embed query parameters within a page change
-        queryString = preserveEmbedQueryParams("").toString()
-        this.hostCommunicationMgr.sendMessageToHost({
-          type: "SET_QUERY_PARAM",
-          queryParams: queryString,
-        })
-      }
     } else if (currentPageScriptHash) {
       // The user didn't specify which page to run, which happens when they
       // click the "Rerun" button in the main menu. In this case, we
@@ -1800,10 +1812,9 @@ export class App extends PureComponent<Props, State> {
   getQueryString = (): string => {
     const { queryParams } = this.state
 
-    const queryString =
-      queryParams && queryParams.length > 0
-        ? queryParams
-        : document.location.search
+    const queryString = notNullOrUndefined(queryParams)
+      ? queryParams
+      : document.location.search
 
     return queryString.startsWith("?") ? queryString.substring(1) : queryString
   }
