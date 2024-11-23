@@ -1113,7 +1113,7 @@ export class App extends PureComponent<Props, State> {
    * Handler called when the history state changes, e.g. `popstate` event.
    */
   onHistoryChange = (): void => {
-    const { currentPageScriptHash } = this.state
+    const { currentPageScriptHash, queryParams } = this.state
     const targetAppPage = this.appNavigation.findPageByUrlPath(
       window.location.pathname
     )
@@ -1121,7 +1121,9 @@ export class App extends PureComponent<Props, State> {
 
     // do not cause a rerun when an anchor is clicked and we aren't changing pages
     const hasAnchor = window.location.toString().includes("#")
-    const isSamePage = targetAppPage?.pageScriptHash === currentPageScriptHash
+    const isSamePage =
+      targetAppPage?.pageScriptHash === currentPageScriptHash &&
+      areUserURLSearchParamsEqual(queryParams ?? "", window.location.search)
 
     if (isNullOrUndefined(targetAppPage) || (hasAnchor && isSamePage)) {
       return
