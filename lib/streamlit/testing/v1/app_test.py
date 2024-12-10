@@ -442,6 +442,19 @@ class AppTest:
         self._page_hash = calc_md5(page_path_str)
         return self
 
+    def clear_all_caches(self) -> AppTest:
+        """Clear the internal `st.cache_data` and `st.cache_resource` function decorator caches associated with this
+        `AppTest` instance.
+
+        Returns
+        -------
+        AppTest
+            self
+        """
+        self._data_cache_provider.clear_all()
+        self._resource_cache_provider.clear_all()
+        return self
+
     @property
     def main(self) -> Block:
         """Sequence of elements within the main body of the app.
